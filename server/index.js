@@ -1,22 +1,30 @@
 const express = require('express');
-const app = express();
-
+const expressGraphQL = require('express-graphql').graphqlHTTP;
 const connectToDB = require('./db/conn');
-const cors = require('cors');
-const Axios = require('axios');
-require('dotenv').config();
-
 const PORT = process.env.PORT || 3001;
-
-app.use(express.json());
-app.use(cors());
-
-connectToDB();
-
-app.get('/', (req, res) => {
-  console.log(req.baseUrl);
+const cors = require('cors');
+const { GraphQLSchema, GraphQLObjectType, GraphQLString } = require('graphql');
+const app = express();
+const schema = new GraphQLSchema({
+  query: new GraphQLObjectType({
+    name: 'HelloWorld',
+    fields: () => ({
+      message: { type: GraphQLString, resolve: () => 'Hello World' },
+    }),
+  }),
 });
 
+require('dotenv').config();
+connectToDB();
+
+app.use(
+  '/graphql',
+  expressGraphQL({
+    schema: schema,
+    graphiql: true,
+  })
+);
+
 app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
